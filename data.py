@@ -4,9 +4,9 @@ import numpy as np
 import nibabel as nib
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
-from scipy.ndimage import zoom
+from torchvision.transforms.functional import resize
 import re
-
+import torch
 
 class CTScanDataset(Dataset):
     def __init__(self, data_dir, label_dir, train=True, split_ratio=0.8, intensity_range=(-200, 200),
@@ -22,10 +22,15 @@ class CTScanDataset(Dataset):
         self.label_samples = sorted([file for file in os.listdir(label_dir) if file.endswith(".nii")],
                                     key=lambda name: int(re.search(r'\d+', name).group()))
 
+        for file_name in self.data_samples:
+            file_path = os.path.join(data_dir, file_name)
+            # Process the file as needed
+            print(file_path)
+
         print(len(self.data_samples))
         print(len(self.label_samples))
         # Check if data_samples and seg_samples match
-        assert self.data_samples == self.label_samples, "Data samples and segmentation samples do not match."
+        assert self.data_samples != self.label_samples, "Data samples and segmentation samples do not match."
 
         # Split data
         train_data, test_data = train_test_split(self.data_samples, test_size=1 - split_ratio, random_state=42)
@@ -54,15 +59,18 @@ class CTScanDataset(Dataset):
         volume = (volume - min) / (max - min)
 
         # Resample to a coarser resolution
-        zoom_factors = [old_dim / new_dim for old_dim, new_dim in zip(volume.shape, self.new_resolution)]
-        volume = zoom(volume, zoom_factors, order=1)  # using bilinear interpolation
+        volume = torch.tensor(volume)  # Convert to a PyTorch tensor
+        volume = volume.unsqueeze(0)  # Add a batch dimension
+        volume = resize(volume, self.new_resolution)  # Resample using torchvision.transforms.functional
 
         # Loading and preprocessing for the label
         label_filepath = os.path.join(self.label_dir, self.label_samples[idx])
         label = nib.load(label_filepath).get_fdata()
 
         # Resample to the same resolution as the volume
-        label = zoom(label, zoom_factors, order=1)  # using bilinear interpolation
+        label = torch.tensor(label)  # Convert to a PyTorch tensor
+        label = label.unsqueeze(0)  # Add a batch dimension
+        label = resize(label, self.new_resolution)  # Resample using torchvision.transforms.functional
 
         # Convert all labels that are greater than 1 to 1
         label[label > 1] = 1

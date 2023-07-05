@@ -1,12 +1,13 @@
 from data import CTScanDataset
+import numpy as np
 
 # Initialize the dataset
-data_dir = '/home/aviadp/work/project/resnet-liver/train_volume'
-seg_dir = '/home/aviadp/work/project/resnet-liver/train_seg'
+data_dir = '/home/aviad/Documents/project/resnet-liver/train_volume'
+seg_dir = '/home/aviad/Documents/project/resnet-liver/train_seg'
 dataset = CTScanDataset(data_dir, seg_dir, train=True)
 
 # Get a sample from the dataset
-sample = dataset[0]  # get the first sample
+sample = dataset.__getitem__(0) # get the first sample
 
 # Print the shapes and some stats about the sample to check if everything is ok
 print(f"Input shape: {sample['input'].shape}, Output shape: {sample['output'].shape}")
