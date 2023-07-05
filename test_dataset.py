@@ -1,3 +1,5 @@
+from data import CTScanDataset
+
 # Initialize the dataset
 data_dir = '/home/aviadp/work/project/resnet-liver/train_volume'
 seg_dir = '/home/aviadp/work/project/resnet-liver/train_seg'

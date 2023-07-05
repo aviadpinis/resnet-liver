@@ -7,27 +7,29 @@ from sklearn.model_selection import train_test_split
 from scipy.ndimage import zoom
 import re
 
+
 class CTScanDataset(Dataset):
-    def __init__(self, data_dir, label_dir, train=True, split_ratio=0.8, intensity_range=(-200, 200), new_resolution=(224,224)):
+    def __init__(self, data_dir, label_dir, train=True, split_ratio=0.8, intensity_range=(-200, 200),
+                 new_resolution=(224, 224)):
         self.data_dir = data_dir
         self.label_dir = label_dir
         self.intensity_range = intensity_range
         self.new_resolution = new_resolution
 
         # Load all file names and sort them by extracting the numbers from the filenames
-        self.data_samples = sorted([file for file in os.listdir(data_dir) if file.endswith(".nii")], 
-                                    key=lambda name: int(re.search(r'\d+', name).group()))
+        self.data_samples = sorted([file for file in os.listdir(data_dir) if file.endswith(".nii")],
+                                   key=lambda name: int(re.search(r'\d+', name).group()))
         self.label_samples = sorted([file for file in os.listdir(label_dir) if file.endswith(".nii")],
                                     key=lambda name: int(re.search(r'\d+', name).group()))
 
-	print(len(self.data_samples))
-	print(len(self.label_samples))
+        print(len(self.data_samples))
+        print(len(self.label_samples))
         # Check if data_samples and seg_samples match
         assert self.data_samples == self.label_samples, "Data samples and segmentation samples do not match."
 
         # Split data
-        train_data, test_data = train_test_split(self.data_samples, test_size=1-split_ratio, random_state=42)
-        train_labels, test_labels = train_test_split(self.label_samples, test_size=1-split_ratio, random_state=42)
+        train_data, test_data = train_test_split(self.data_samples, test_size=1 - split_ratio, random_state=42)
+        train_labels, test_labels = train_test_split(self.label_samples, test_size=1 - split_ratio, random_state=42)
         self.data_samples = train_data if train else test_data
         self.label_samples = train_labels if train else test_labels
 
