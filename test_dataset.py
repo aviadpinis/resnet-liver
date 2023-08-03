@@ -2,8 +2,8 @@ from data import CTScanDataset
 import numpy as np
 
 # Initialize the dataset
-data_dir = '/home/aviad/Documents/project/resnet-liver/train_volume'
-seg_dir = '/home/aviad/Documents/project/resnet-liver/train_seg'
+data_dir = '/home/aviad/Desktop/src/learning/resnet-liver/train_volume'
+seg_dir = '/home/aviad/Desktop/src/learning/resnet-liver/train_seg'
 dataset = CTScanDataset(data_dir, seg_dir, train=True)
 
 # Get a sample from the dataset

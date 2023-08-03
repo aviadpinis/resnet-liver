@@ -4,9 +4,10 @@ import numpy as np
 import nibabel as nib
 from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
-from torchvision.transforms.functional import resize
+from skimage.transform import resize
 import re
 import torch
+
 
 class CTScanDataset(Dataset):
     def __init__(self, data_dir, label_dir, train=True, split_ratio=0.8, intensity_range=(-200, 200),
@@ -50,6 +51,10 @@ class CTScanDataset(Dataset):
         volume_filepath = os.path.join(self.data_dir, self.data_samples[idx])
         volume = nib.load(volume_filepath).get_fdata()
 
+        print("min", volume.min())
+        print("max", volume.max())
+        w, h, z = volume.shape
+
         # Clip intensity
         np.clip(volume, self.intensity_range[0], self.intensity_range[1], out=volume)
 
@@ -59,20 +64,21 @@ class CTScanDataset(Dataset):
         volume = (volume - min) / (max - min)
 
         # Resample to a coarser resolution
-        volume = torch.tensor(volume)  # Convert to a PyTorch tensor
-        volume = volume.unsqueeze(0)  # Add a batch dimension
-        volume = resize(volume, self.new_resolution)  # Resample using torchvision.transforms.functional
+        volume = resize(volume, (self.new_resolution[0], self.new_resolution[1], z), order=0, mode='edge', cval=0,
+                        clip=True, preserve_range=True)
+        volume = torch.tensor(volume)
+        volume = volume.unsqueeze(0)
 
         # Loading and preprocessing for the label
         label_filepath = os.path.join(self.label_dir, self.label_samples[idx])
         label = nib.load(label_filepath).get_fdata()
 
-        # Resample to the same resolution as the volume
-        label = torch.tensor(label)  # Convert to a PyTorch tensor
-        label = label.unsqueeze(0)  # Add a batch dimension
-        label = resize(label, self.new_resolution)  # Resample using torchvision.transforms.functional
+        label = resize(label, (self.new_resolution[0], self.new_resolution[1], z), order=0, mode='edge', cval=0,
+                        clip=True, preserve_range=True)
 
         # Convert all labels that are greater than 1 to 1
-        label[label > 1] = 1
+        height, width, slices = label.shape
+        binary_labels = np.asarray([float(label[:,:,i].max()>0) for i in range(slices)])
+        label = torch.tensor(binary_labels)
 
         return {"input": volume, "output": label}

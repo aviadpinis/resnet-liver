@@ -1,0 +1,10 @@
+torch
+torchvision
+pytorch-lightning
+scikit-learn
+nibabel
+scipy
+numpy
+Pillow
+scikit-image
+wandb
